@@ -1,0 +1,53 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: springboot-sharding-jdbc-demo
+
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: invalidFlag  #全局逻辑删除字段值 3.3.0开始支持，详情看下面。
+      logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+      logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+      insert-strategy: NOT_EMPTY
+      update-strategy: NOT_NULL
+      select-strategy: NOT_NULL
+      id-type: AUTO
+  #  Mapper 所对应的 XML 文件位置
+  mapper-locations: classpath:/mapper/*Mapper.xml
+  configuration:
+    cache-enabled: false
+    # 是否开启自动驼峰命名映射,如果您的数据库命名符合规则,无需使用 @TableField 注解指定数据库字段名
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+management:
+  server:
+    servlet:
+      context-path: /monitor  # actuator的访问路径
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 10000
+        timeout:
+          enabled: true
+
+ribbon:
+  ReadTimeout: 10000
+  ConnectTimeout: 10000
+  GzipPayload: true
+  MaxAutoRetries: 1 #同一台实例最大重试次数,不包括首次调用
+  MaxAutoRetriesNextServer: 1 #重试负载均衡其他的实例最大重试次数,不包括首次调用
+  OkToRetryOnAllOperations: false  #是否所有操作都重试

@@ -1,0 +1,194 @@
+server:
+  port: 8888
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://192.168.8.204:3306/sharding_jdbc_test?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: taihe123@
+    max-wait: 60000
+    max-active: 100
+    min-idle: 10
+    initial-size: 10
+
+    druid:
+      filters: stat,wall,log4j2
+      #过滤器
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        #开启session统计功能
+        session-stat-enable: true
+        #缺省sessionStatMaxCount是1000个
+        session-stat-max-count: 1000
+
+      #启用内置的监控页面
+      stat-view-servlet:
+        enabled: true
+        #内置监控页面的地址
+        url-pattern: /druid/*
+        #设置登录用户名
+        login-username: admin
+        #设置登录密码
+        login-password: admin
+        #白名单（如果allow没有配置或者为空，则允许所有访问）
+        allow:
+        #黑名单（deny优先于allow，如果在deny列表中，就算在allow列表中，也会被拒绝）
+        deny:
+  shardingsphere:
+    datasource:
+      names: ds-master,ds-slave-0
+      #主库数据源
+      ds-master:
+        type: com.alibaba.druid.pool.DruidDataSource
+        url: jdbc:mysql://192.168.8.204:3306/sharding_jdbc_test?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong&useSSL=false
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        username: root
+        password: taihe123@
+      #从库数据源
+      ds-slave-0:
+        type: com.alibaba.druid.pool.DruidDataSource
+        url: jdbc:mysql://192.168.2.229:3306/sharding_jdbc_test?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong&useSSL=false
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        username: root
+        password: root_2019
+
+    sharding:
+        #表设置
+      tables:
+        order_task_module_group_problem:
+          actual-data-nodes: sharding_jdbc_test.order_task_module_group_problem_$->{2019..2020}
+            #分库策略
+#            database-strategy:
+#              inline:
+#                sharding-column: id
+#                algorithm-expression: order_task_module_group_problem->{id % 2}
+#              #单分片
+
+            #分表策略
+          table-strategy:
+            standard:
+              sharding-column: task_year
+              #精确分片算法类名称，用于=和IN
+              precise-algorithm-class-name: com.springboot.sharding.jdbc.comm.config.MyPreciseAlgorithm
+
+              #用于范围查找 > <  >=  <= between
+              range-algorithm-class-name: com.springboot.sharding.jdbc.comm.config.MyRangeShardingAlgorithm
+
+            #inline:
+              #根据订单取模
+             # sharding-column: task_id
+             # algorithm-expression: order_task_module_group_problem_$->{task_id % 2}
+              #allow-range-query-with-inline-sharding: true
+#            interval:
+#              datetime-pattern: yyyy
+#              sharding-suffix-pattern: yyyy
+#              datetime-interval-amount: 1
+#              datetime-interval-unit: YEARS
+#            auto-interval:
+#              datetime-lower: 2019-01-01 00:00:00
+#              datetime-upper: 2020-01-01 00:00:00
+#              sharding-seconds: 60*60*24*365
+            sharding-count: 2
+
+          key-generator:
+            column: id
+            type: SNOWFLAKE
+
+      #分片数据脱敏
+      encrypt-rule:
+        encryptors:
+          encryptor-md5:
+            type: MD5
+        tables:
+          order_task_module_group_problem:
+            columns:
+              #逻辑字段
+              product_name:
+                #储存明文
+                plainColumn: pain_column
+                #储存暗文
+                cipherColumn: cipher_column
+                encryptor: encryptor-md5
+
+      #
+#            #全局生成序列
+#            key-generate-strategy:
+#              #序列列名
+#              column:
+#              #序列生成策略
+#              keygenerator-name:
+#
+      #绑定的表
+      #binding-tables: order_task
+
+      #广播规则表
+      broadcast-tables: order_task
+
+      #读写分离
+      master-slave-rules:
+        #数据源对应的逻辑库
+        sharding_jdbc_test:
+          master-data-source-name: ds-master
+          slave-data-source-names[0]: ds-slave-0
+          #从库负载均衡算法类名称。该类需实现MasterSlaveLoadBalanceAlgorithm
+          #load-balance-algorithm-class-name: #
+          #ROUND_ROBIN，RANDOM
+          load-balance-algorithm-type: ROUND_ROBIN
+
+    #数据脱敏
+
+    props:
+      query:
+        with:
+          cipher:
+            column: true
+#    encrypt:
+#      encryptors:
+#        md5:
+#          type: MD5
+#      tables:
+#        order_task_module_group_problem:
+#          columns:
+#            #逻辑字段
+#            pwd:
+#              #储存明文
+#              plainColumn: product_id
+#              #储存暗文
+#              cipherColumn: product_name
+#              encryptor: md5
+#              assistedQueryColumn: product_name
+
+
+logging:
+  #根据配置文件设置日志的保存路径
+  path: ./css2.0-service_application-logFiles/${spring.application.name}
+  level:
+    root: info
+
+#Seata分布式事务
+seata:
+  enabled: true
+  tx-service-group: my_test_tx_group
+  config:
+    type: nacos
+    file:
+      name: file.conf
+    nacos:
+      namespace: ""
+      serverAddr: 192.168.8.204
+      #serverAddr: localhost
+      group: SEATA_GROUP
+      userName: ""
+      password: ""
+  registry:
+    type: nacos
+    nacos:
+      application: seata-server
+      server-addr: 192.168.8.204
+      #server-addr: localhost
+      namespace: ""
+      userName: ""
+      password: ""
+  application-id: ${spring.application.name}

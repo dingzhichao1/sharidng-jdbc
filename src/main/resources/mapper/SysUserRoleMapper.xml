@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.sharding.jdbc.dao.ShardingJdbcMapper">
+
+
+    <select id="getProblemByTaskId" parameterType="Integer" resultType="com.springboot.sharding.jdbc.entity.OrderTaskModuleGroupProblem">
+        SELECT  task_id,product_id,product_name,task_year,c_datetime FROM order_task_module_group_problem  WHERE task_year=#{taskId}
+    </select>
+
+    <select id="getProblemByTaskId1" parameterType="Integer" resultType="com.springboot.sharding.jdbc.entity.OrderTaskModuleGroupProblem">
+      select t.id as id,p.id as pid from order_task t
+        inner join order_task_module_group_problem p on t.id=p.task_id
+        where t.id=1 and p.c_datetime ='2020-09-08 01:25:21'
+
+    </select>
+
+
+
+<!--    <select id="getUserListByRole" resultType="cn.net.topcredit.model.vo.sys_user.SysUserRoleItemVo" parameterType="cn.net.topcredit.model.vo.sys_role.SysUserRoleSearchVo" >-->
+<!--         SELECT ur.id id,u.name name,ur.create_time create_time,u.id user_id  FROM sys_user_role ur-->
+<!--         INNER JOIN  sys_user u ON ur.sys_user_id=u.id-->
+<!--         WHERE ur.sys_role_id=#{vo.roleId}  and u.invalid_flag=false  and ur.invalid_flag=false-->
+<!--    </select>-->
+
+
+
+
+
+
+
+
+</mapper>
